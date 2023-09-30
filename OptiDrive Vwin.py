@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 import tkinter as tk
 from tkinter import ttk
 
+
 def criar_tabela():
     data = sqlite3.connect("database.db")
     cursor = data.cursor()
@@ -28,37 +29,43 @@ def criar_tabela():
     ''')
     data.commit()
     data.close()
+
+
 def check_disk_health():
     partitions = psutil.disk_partitions()
-    
+
     for partition in partitions:
-            
-            disk_usage = psutil.disk_usage(partition.mountpoint)
-            health_status = "Saudável"
 
-            if hasattr(psutil, 'sensors'):
-                try:
-                    # Verifica o atributo SMART
-                    smart_info = psutil.sensors_smart_values(partition.device)
-                    if 'assessment' in smart_info:
-                        assessment = smart_info['assessment']
-                        if assessment == 'Risco':
-                            health_status = "Risco"
-                        elif assessment == 'Crítico':
-                            health_status = "Crítico"
-                except AttributeError:
-                    pass
+        disk_usage = psutil.disk_usage(partition.mountpoint)
+        health_status = "Saudável"
 
-            print(f"Partição: {partition.device}")
-            print(f"Status de Saúde: {health_status}")
-            
+        if hasattr(psutil, 'sensors'):
+            try:
+                # Verifica o atributo SMART
+                smart_info = psutil.sensors_smart_values(partition.device)
+                if 'assessment' in smart_info:
+                    assessment = smart_info['assessment']
+                    if assessment == 'Risco':
+                        health_status = "Risco"
+                    elif assessment == 'Crítico':
+                        health_status = "Crítico"
+            except AttributeError:
+                pass
+
+        print(f"Partição: {partition.device}")
+        print(f"Status de Saúde: {health_status}")
+
+
 def is_windows_64bit():
     # Verifica se a variável de ambiente 'ProgramFiles(x86)' existe. Ela só existe em sistemas de 64 bits.
     return 'ProgramFiles(x86)' in os.environ
 
+
 win = ("64 bits") if is_windows_64bit() else ("32 bits")
 
 # Informações da Memória Interna
+
+
 def get_memory():
     partitions = psutil.disk_partitions()
     disk_info = []
@@ -66,7 +73,8 @@ def get_memory():
     for partition in partitions:
         try:
             usage = psutil.disk_usage(partition.mountpoint)
-            total_space_gb = usage.total / (1024**3)  # Capacidade total do disco em GB
+            # Capacidade total do disco em GB
+            total_space_gb = usage.total / (1024**3)
             used_space_gb = usage.used / (1024**3)    # Espaço utilizado em GB
 
             disk_info.append(f"Disco {partition.device}:")
@@ -74,9 +82,11 @@ def get_memory():
             disk_info.append(f"  Espaço Utilizado: {used_space_gb:.2f} GB")
             disk_info.append("\n")
         except Exception as e:
-            disk_info.append(f"Erro ao obter informações do disco {partition.device}: {str(e)}")
+            disk_info.append(
+                f"Erro ao obter informações do disco {partition.device}: {str(e)}")
 
     return "\n".join(disk_info)
+
 
 def get_ram():
     ram = psutil.virtual_memory()
@@ -87,6 +97,8 @@ def get_ram():
     return f"Capacidade Total de RAM: {total_ram_gb:.2f} GB, RAM em Uso: {used_ram_gb:.2f} GB, Porcentagem de Uso: {percent_used:.2f}%"
 
 # Informações da GPU
+
+
 def get_gpu():
     try:
         GPUs = GPUtil.getGPUs()
@@ -100,17 +112,23 @@ def get_gpu():
         return [f"Erro ao obter informações da GPU..."]
 
 # Informações da CPU
+
+
 def get_cpu():
     info = cpuinfo.get_cpu_info()
     return f"CPU: {info['brand_raw']}"
 
 # Informações da Placa-mãe
+
+
 def get_motherboard():
     w = wmi.WMI()
     motherboard = w.Win32_BaseBoard()[0]
     return f"Placa-mãe: {motherboard.Product}"
 
 # Informações da Fonte de Alimentação
+
+
 def get_power_supply():
     try:
         w = wmi.WMI()
@@ -121,31 +139,33 @@ def get_power_supply():
             return "Fonte de Alimentação não encontrada"
     except Exception as e:
         return f"Erro ao obter informações da fonte de alimentação..."
-          
-def cadastro():
-    
-            print("\nAqui estão suas informações:")
-            print(get_memory())
-            check_disk_health()  # Chame check_disk_health aqui, fora do loop
-            print(get_ram())
-            print(get_cpu())
-            print(get_motherboard())
-            print(f"Sistema operando em: {win}")
-            gpu_info = get_gpu()
-            if gpu_info:
-                for info in gpu_info:
-                    print(info)
-            else:
-                print("Nenhuma GPU encontrada.")
-            print(get_power_supply())
 
-            data = sqlite3.connect("database.db")
-            cursor = data.cursor()
-            cursor.execute("INSERT INTO infos (cpu, ram, memoria, status, mother_board, fonte, sistem) VALUES (?, ?, ?, ?, ?, ?)",
-                        (get_cpu(), get_ram(), get_memory(), get_motherboard(), get_power_supply(), win))
-            data.commit()
-            data.close()
-            print("Inscrição realizada com sucesso!")
+
+def cadastro():
+
+    print("\nAqui estão suas informações:")
+    print(get_memory())
+    check_disk_health()  # Chame check_disk_health aqui, fora do loop
+    print(get_ram())
+    print(get_cpu())
+    print(get_motherboard())
+    print(f"Sistema operando em: {win}")
+    gpu_info = get_gpu()
+    if gpu_info:
+        for info in gpu_info:
+            print(info)
+    else:
+        print("Nenhuma GPU encontrada.")
+    print(get_power_supply())
+
+    data = sqlite3.connect("database.db")
+    cursor = data.cursor()
+    cursor.execute("INSERT INTO infos (cpu, ram, memoria, status, mother_board, fonte, sistem) VALUES (?, ?, ?, ?, ?, ?)",
+                   (get_cpu(), get_ram(), get_memory(), get_motherboard(), get_power_supply(), win))
+    data.commit()
+    data.close()
+    print("Inscrição realizada com sucesso!")
+
 
 def consultar_melhoria():
     print(f"certo, vamos pelo começo. Vejo que seu sistema é um {win}")
@@ -154,13 +174,15 @@ def consultar_melhoria():
     elif win == "32 bits":
         print("Certo, então você está com uma máquina que possui a capacidade de até 8GB de memória RAM. Podemos começar por isso, estou gerando uma sugestão de compra com o melhor custo-benefício para isso.")
     else:
-        win = input("Parece que não consegui pegar os seus dados corretamente para sugestão. Poderia me informar quantos bits seria sua máquina? [ex: 32 bits, 64 bits]")
+        win = input(
+            "Parece que não consegui pegar os seus dados corretamente para sugestão. Poderia me informar quantos bits seria sua máquina? [ex: 32 bits, 64 bits]")
         data = sqlite3.connect("database.db")
         cursor = data.cursor()
         cursor.execute("INSERT INTO infos (sistem) VALUES (?)",
                        (win,))
         data.commit()
         data.close()
+
 
 def menu():
     criar_tabela()
@@ -181,6 +203,7 @@ def menu():
             break
         else:
             print("Opção inválida. Tente novamente.")
+
 
 if __name__ == "__main__":
     menu()
