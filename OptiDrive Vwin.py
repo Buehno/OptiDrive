@@ -160,8 +160,8 @@ def cadastro():
 
     data = sqlite3.connect("database.db")
     cursor = data.cursor()
-    cursor.execute("INSERT INTO infos (cpu, ram, memoria, status, mother_board, fonte, sistem) VALUES (?, ?, ?, ?, ?, ?)",
-                   (get_cpu(), get_ram(), get_memory(), get_motherboard(), get_power_supply(), win))
+    cursor.execute("INSERT INTO infos (cpu, ram, memoria, status, mother_board, fonte, sistem) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                   (get_cpu(), get_ram(), get_memory(), "status", get_motherboard(), get_power_supply(), win))
     data.commit()
     data.close()
     print("Inscrição realizada com sucesso!")
@@ -208,6 +208,6 @@ def menu():
 if __name__ == "__main__":
     menu()
 
-janela = tk.tk()
-janela.tittle("OPTIDRIVE")
+janela = tk.Tk()  # Corrigir a chamada para a classe Tk()
+janela.title("OPTIDRIVE")  # Corrigir a chamada para o método title()
 janela.mainloop()
